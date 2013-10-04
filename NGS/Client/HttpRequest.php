@@ -1,6 +1,8 @@
 <?php
 namespace NGS\Client;
 
+require_once(__DIR__.'/../Logger/Logger.php');
+
 /**
  * Request object used by {@see NGS\Client\RestHttp}
  */
@@ -12,6 +14,7 @@ class HttpRequest
     private $options;
     private $responseInfo;
     private $responseHeaders;
+    private $responseBody;
 
     public function __construct($uri, $method = null, $body = null, $headers = null, $options = null)
     {
@@ -21,6 +24,7 @@ class HttpRequest
         $this->options = array(
             CURLOPT_RETURNTRANSFER  => true,
             CURLINFO_HEADER_OUT     => true,
+            CURLOPT_HEADER          => true
         );
 
         if (is_array($options)) {
@@ -75,7 +79,14 @@ class HttpRequest
         $response = curl_exec($this->curl);
         $this->responseInfo = curl_getinfo($this->curl);
 
-        return $response;
+        $headerSize = $this->responseInfo['header_size'];
+
+        $this->responseHeaders = explode("\r\n", substr($response, 0, $headerSize));
+        array_splice($this->responseHeaders, -2);
+
+        $this->responseBody = substr($response, $headerSize);
+
+        return $this->responseBody;
     }
 
     public function getResponseInfo()
@@ -85,7 +96,7 @@ class HttpRequest
 
     public function getResponseHeaders()
     {
-        return $this->getResponseInfo();
+        return $this->responseHeaders;
     }
 
     public function getResponseCode()
@@ -111,5 +122,31 @@ class HttpRequest
         return strtoupper($this->method).' '.$this->uri."\n"
             .implode("\n", $headers)."\n"
             .$body;
+    }
+
+    public function logRequest()
+    {
+        $headers = $this->options[CURLOPT_HTTPHEADER];
+        $body = $this->options[CURLOPT_POSTFIELDS];
+
+        $logger = \NGS\Logger::instance();
+        $logger->info(array(
+            'Sending HTTP Request:',
+            $this->method.' '.$this->uri,
+            implode(PHP_EOL, $headers),
+            $body
+        ));
+    }
+
+    public function logResponse()
+    {
+        $headers = $this->getResponseHeaders();
+        $body = $this->responseBody;
+
+        $logger = \NGS\Logger::instance();
+        $logger->info(array('Received HTTP Response:',
+            implode(PHP_EOL, $headers),
+            $body
+        ));
     }
 }

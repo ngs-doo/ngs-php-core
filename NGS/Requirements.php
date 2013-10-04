@@ -55,3 +55,7 @@ require_once __DIR__.'/Patterns/SearchBuilder.php';
 require_once __DIR__.'/Patterns/Templater.php';
 require_once __DIR__.'/Patterns/OlapCube.php';
 require_once __DIR__.'/Patterns/CubeBuilder.php';
+
+require_once __DIR__.'/Logger/FileLogger.php';
+require_once __DIR__.'/Logger/XMPPLogger.php';
+require_once __DIR__.'/Logger/Logger.php';

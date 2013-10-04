@@ -159,13 +159,16 @@ class RestHttp
                 'request' => $request,
             ));
 
+        $request->logRequest();
         $response = $request->send();
 
-        $responseHeaders = $request->getResponseHeaders();
+        $responseInfo = $request->getResponseInfo();
         $this->lastResponse = array(
-            'info' => $responseHeaders,
+            'info' => $responseInfo,
             'body' => $response
         );
+
+        $request->logResponse();
 
         // no response received from server or curl errored out
         if($response === null && $this->hasSubscribers()) {
